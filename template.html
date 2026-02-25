@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>速狗海外仓 — 智能报价系统 V2026.06</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+/* ── 全局 ── */
+:root{--brand:#fd7e14;--brand-dark:#c75e00;--surface:#f4f7f6;--card-bg:#fff;--text-muted2:#6c757d}
+*{box-sizing:border-box}
+body{background:var(--surface);font-family:"Segoe UI","Microsoft YaHei",sans-serif;font-size:14px}
+.page-header{background:#111;color:#fff;padding:14px 0;border-bottom:4px solid var(--brand);margin-bottom:0}
+.page-header h4{font-size:1.15rem;font-weight:800;margin:0}
+.page-header .sub{font-size:.75rem;opacity:.65;margin-top:2px}
+
+/* ── 导航标签 ── */
+.nav-tabs .nav-link{color:#555;font-weight:600;border-radius:8px 8px 0 0;padding:10px 20px}
+.nav-tabs .nav-link.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.tab-pane{padding:20px;background:#fff;border:1px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px}
+
+/* ── 卡片 ── */
+.c-card{border:none;box-shadow:0 2px 10px rgba(0,0,0,.06);border-radius:10px;margin-bottom:16px;overflow:hidden}
+.c-card .c-head{background:#0f172a;color:#fff;padding:12px 18px;font-weight:700;font-size:.9rem}
+.c-card .c-head.blue{background:#1d4ed8}
+.c-card .c-head.orange{background:var(--brand)}
+.c-card .c-head.green{background:#15803d}
+.c-card .c-body{padding:18px}
+
+/* ── 表单元素 ── */
+.form-label{font-weight:700;font-size:.8rem;color:#334155;margin-bottom:4px}
+.form-control,.form-select{font-size:.88rem;border-color:#cbd5e1}
+.form-control:focus,.form-select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(253,126,20,.15)}
+
+/* ── 单位转换器 ── */
+.converter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.conv-group{position:relative}
+.conv-group label{display:block;font-size:.75rem;font-weight:700;color:#64748b;margin-bottom:3px}
+.conv-group input{width:100%;padding:7px 10px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:.88rem;transition:border-color .2s}
+.conv-group input:focus{outline:none;border-color:var(--brand)}
+.conv-group .unit-badge{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:.7rem;color:#94a3b8;pointer-events:none;margin-top:9px}
+.conv-arrow{display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--brand);padding-top:22px}
+.derived-row{display:flex;gap:12px;margin-top:10px;padding:10px 14px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0}
+.derived-item{flex:1;text-align:center}
+.derived-item .label{font-size:.72rem;color:#64748b}
+.derived-item .value{font-size:1.1rem;font-weight:800;color:#0f172a}
+.derived-item .value.warn{color:#dc2626}
+.derived-item .value.ok{color:#16a34a}
+
+/* ── 开关服务 ── */
+.svc-item{padding:14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:flex-start;gap:12px}
+.svc-item:last-child{border-bottom:none}
+.svc-item .form-check-input{width:1.3em;height:1.3em;margin-top:2px;cursor:pointer}
+.svc-item .svc-body{flex:1}
+.svc-item .svc-title{font-weight:700;font-size:.9rem}
+.svc-item .svc-sub{font-size:.78rem;color:var(--text-muted2);margin-top:3px}
+.svc-item .svc-price{font-size:1.1rem;font-weight:800;color:#dc2626;white-space:nowrap;padding-left:8px}
+.svc-detail{padding:10px 12px;background:#f8fafc;border-radius:6px;margin-top:8px}
+.option-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid #cbd5e1;border-radius:20px;font-size:.8rem;cursor:pointer;background:#fff;transition:all .15s;margin:3px}
+.option-chip.active{border-color:var(--brand);background:#fff7ed;color:#c2410c;font-weight:700}
+
+/* ── 结果区 ── */
+.result-total{background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border-radius:10px;padding:18px 22px;text-align:right}
+.result-total .total-amount{font-size:2.6rem;font-weight:900;color:var(--brand)}
+.result-total .total-label{font-size:.85rem;opacity:.75}
+.result-table th{background:#f1f5f9;font-size:.78rem;color:#64748b;text-transform:uppercase;font-weight:700;padding:8px 10px}
+.result-table td{padding:8px 10px;font-size:.85rem;vertical-align:middle}
+.result-table .item-name{font-weight:700}
+.result-table .item-spec{font-size:.75rem;color:#94a3b8}
+
+/* ── 运费报价表 ── */
+.shipping-table th{background:#0f172a;color:#fff;font-size:.78rem;padding:8px}
+.shipping-table td{padding:8px;font-size:.84rem}
+.price-best{color:#16a34a;font-weight:800;font-size:1rem}
+.price-main{color:#dc2626;font-weight:800}
+.zone-badge{background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0;padding:2px 6px;border-radius:4px;font-size:.75rem;font-weight:700}
+.fuel-included{color:#16a34a;font-weight:600;font-size:.75rem}
+.fuel-extra{color:#d97706;font-size:.75rem}
+.alert-info-sm{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:10px 14px;border-radius:6px;font-size:.82rem;margin-bottom:12px}
+.surcharge-note{font-size:.72rem;color:#64748b}
+
+/* ── 操作费折叠表 ── */
+.op-fee-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.op-fee-table th,.op-fee-table td{border:1px solid #e2e8f0;padding:5px 8px;text-align:center}
+.op-fee-table th{background:#f8fafc;font-weight:700}
+
+/* ── 状态徽章 ── */
+.status-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.75rem;font-weight:700;color:#fff;background:#94a3b8}
+.bg-ok{background:#16a34a}.bg-warn{background:#d97706;color:#fff}.bg-err{background:#dc2626}
+
+/* ── 响应式 ── */
+@media(max-width:768px){
+  .converter-grid{grid-template-columns:1fr 1fr}
+  .shipping-table{font-size:.75rem}
+  .total-amount{font-size:1.8rem!important}
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部栏 -->
+<div class="page-header">
+  <div class="container d-flex justify-content-between align-items-center">
+    <div>
+      <h4><i class="bi bi-box-seam me-2"></i>速狗海外仓 智能报价系统</h4>
+      <div class="sub">V2026.06 | 运费报价 + 库内操作费 + 增值服务 + 单位换算 | 数据自动同步</div>
+    </div>
+    <div class="d-none d-md-block text-end">
+      <span class="badge" style="background:var(--brand)">四舍五入·美分级</span>
+    </div>
+  </div>
+</div>
+
+<div class="container py-3">
+
+<!-- ── 导航标签 ── -->
+<ul class="nav nav-tabs mb-0" id="mainTabs">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-shipping"><i class="bi bi-truck me-1"></i>尾程运费报价</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-vas"><i class="bi bi-boxes me-1"></i>增值服务计算</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-convert"><i class="bi bi-arrow-left-right me-1"></i>单位换算</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-opfee"><i class="bi bi-list-ol me-1"></i>操作费明细</a></li>
+</ul>
+
+<div class="tab-content" id="mainTabContent">
+
+<!-- ══════════════════════════════════════════
+     标签1: 尾程运费报价
+══════════════════════════════════════════ -->
+<div class="tab-pane fade show active" id="tab-shipping">
+<div class="row g-3">
+
+  <!-- 左侧参数面板 -->
+  <div class="col-lg-4">
+
+    <!-- 1. 基础设置 -->
+    <div class="c-card">
+      <div class="c-head">1. 基础设置</div>
+      <div class="c-body">
+
+        <div class="mb-3">
+          <label class="form-label">发货仓库</label>
+          <select class="form-select" id="sh_wh"></select>
+          <div class="text-end mt-1" style="font-size:.75rem;color:var(--brand)" id="sh_wh_region"></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">客户等级</label>
+          <div class="btn-group w-100">
+            <input type="radio" class="btn-check" name="sh_tier" id="sh_t0" value="T0">
+            <label class="btn btn-outline-dark btn-sm" for="sh_t0">T0</label>
+            <input type="radio" class="btn-check" name="sh_tier" id="sh_t1" value="T1">
+            <label class="btn btn-outline-dark btn-sm" for="sh_t1">T1</label>
+            <input type="radio" class="btn-check" name="sh_tier" id="sh_t2" value="T2">
+            <label class="btn btn-outline-dark btn-sm" for="sh_t2">T2</label>
+            <input type="radio" class="btn-check" name="sh_tier" id="sh_t3" value="T3" checked>
+            <label class="btn btn-outline-dark btn-sm" for="sh_t3">T3</label>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">燃油附加费率 <span class="badge bg-secondary" style="font-size:.65rem">MT系列使用</span></label>
+          <div class="input-group input-group-sm">
+            <input type="number" class="form-control" id="sh_fuel" value="16.0" step="0.01">
+            <span class="input-group-text">%</span>
+          </div>
+          <div style="font-size:.72rem;color:#64748b;margin-top:3px">FedEx-632/超大件自动享85折 | ECO/GOFO-MT已含燃油</div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-7">
+            <label class="form-label">收件邮编 (Zip)</label>
+            <input type="text" class="form-control" id="sh_zip" placeholder="输入5位邮编" maxlength="5">
+            <div id="sh_loc_display" style="display:none;margin-top:6px;font-size:.78rem;padding:8px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0"></div>
+          </div>
+          <div class="col-5">
+            <label class="form-label">地址类型</label>
+            <select class="form-select" id="sh_addr">
+              <option value="res">🏠 住宅</option>
+              <option value="com">🏢 商业</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 签名选项 -->
+        <div class="p-2 mb-3" style="background:#f8fafc;border-radius:6px;border:1px solid #e9ecef">
+          <div class="form-label mb-2">附加服务：签名</div>
+          <div class="form-check form-switch mb-1">
+            <input class="form-check-input" type="checkbox" id="sh_sig_direct">
+            <label class="form-check-label" style="font-size:.82rem" for="sh_sig_direct">直接/间接签名</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="sh_sig_adult">
+            <label class="form-check-label" style="font-size:.82rem;color:#dc2626" for="sh_sig_adult">成人签名 (Adult 21+)</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 2. 包裹规格 -->
+    <div class="c-card">
+      <div class="c-head blue">2. 包裹规格</div>
+      <div class="c-body">
+        <div class="mb-2" style="font-size:.78rem;color:#64748b">尺寸单位: Inch (英寸) | 重量: LB (磅)</div>
+        <div class="row g-2 mb-2">
+          <div class="col-4">
+            <input type="number" class="form-control form-control-sm" id="sh_l" placeholder="长 in" step="0.1">
+          </div>
+          <div class="col-4">
+            <input type="number" class="form-control form-control-sm" id="sh_w" placeholder="宽 in" step="0.1">
+          </div>
+          <div class="col-4">
+            <input type="number" class="form-control form-control-sm" id="sh_h" placeholder="高 in" step="0.1">
+          </div>
+        </div>
+        <div class="input-group input-group-sm mb-2">
+          <span class="input-group-text">实重</span>
+          <input type="number" class="form-control" id="sh_wt" placeholder="LB" step="0.1">
+          <span class="input-group-text">LB</span>
+        </div>
+        <div id="sh_pkg_info" class="derived-row" style="display:none">
+          <div class="derived-item">
+            <div class="label">体积重</div>
+            <div class="value" id="sh_dimwt">—</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">计费重</div>
+            <div class="value warn" id="sh_chargewt">—</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">围长</div>
+            <div class="value" id="sh_girth">—</div>
+          </div>
+        </div>
+        <div id="sh_compliance" style="margin-top:8px;display:none">
+          <div style="font-size:.78rem;font-weight:700;color:#dc2626;margin-bottom:4px">⚠ 规格预检</div>
+          <div id="sh_comp_list" style="font-size:.78rem"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /col-lg-4 -->
+
+  <!-- 右侧结果区 -->
+  <div class="col-lg-8">
+    <div class="c-card h-100">
+      <div class="c-head orange">📊 报价结果 <span id="sh_tier_badge" class="badge bg-light text-dark ms-2">T3</span></div>
+      <div class="c-body">
+
+        <div class="alert-info-sm">
+          <b>📢 规则说明：</b>
+          GOFO-MT 已含燃油，不再单独叠加 | 燃油率可手动调整 | 签名费按渠道单独计费 |
+          <b>输入邮编+重量即实时计算</b>，无需手动点击
+        </div>
+
+        <div id="sh_pkg_badge" class="mb-2 text-muted" style="font-size:.82rem">等待输入邮编与重量...</div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle shipping-table">
+            <thead>
+              <tr>
+                <th width="22%">渠道</th>
+                <th width="7%">Zone</th>
+                <th width="10%">计费重</th>
+                <th width="13%">基础运费</th>
+                <th width="28%">费用明细</th>
+                <th width="12%" class="text-end">总费用</th>
+                <th width="8%" class="text-center">状态</th>
+              </tr>
+            </thead>
+            <tbody id="sh_result_body">
+              <tr><td colspan="7" class="text-center py-4 text-muted">输入参数后自动计算...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /col-lg-8 -->
+
+</div><!-- /row -->
+</div><!-- /tab-shipping -->
+
+
+<!-- ══════════════════════════════════════════
+     标签2: 增值服务计算
+══════════════════════════════════════════ -->
+<div class="tab-pane fade" id="tab-vas">
+<div class="row g-3">
+
+  <!-- 左: 服务选择 -->
+  <div class="col-lg-7">
+
+    <!-- 基础设置 -->
+    <div class="c-card">
+      <div class="c-head">1. 基础设置</div>
+      <div class="c-body">
+        <div class="row align-items-center g-3">
+          <div class="col-sm-6">
+            <label class="form-label">客户等级</label>
+            <div class="btn-group w-100">
+              <input type="radio" class="btn-check" name="vas_tier" id="vas_t0" value="T0">
+              <label class="btn btn-outline-dark btn-sm" for="vas_t0">T0</label>
+              <input type="radio" class="btn-check" name="vas_tier" id="vas_t1" value="T1">
+              <label class="btn btn-outline-dark btn-sm" for="vas_t1">T1</label>
+              <input type="radio" class="btn-check" name="vas_tier" id="vas_t2" value="T2">
+              <label class="btn btn-outline-dark btn-sm" for="vas_t2">T2</label>
+              <input type="radio" class="btn-check" name="vas_tier" id="vas_t3" value="T3" checked>
+              <label class="btn btn-outline-dark btn-sm" for="vas_t3">T3</label>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">计量单位</label>
+            <div class="btn-group w-100">
+              <input type="radio" class="btn-check" name="vas_unit" id="vas_imp" value="imp" checked>
+              <label class="btn btn-outline-primary btn-sm" for="vas_imp">英制 (Lb/In)</label>
+              <input type="radio" class="btn-check" name="vas_unit" id="vas_met" value="met">
+              <label class="btn btn-outline-primary btn-sm" for="vas_met">公制 (Kg/CM)</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 产品规格 -->
+    <div class="c-card">
+      <div class="c-head blue">2. 产品规格</div>
+      <div class="c-body">
+        <div class="row g-2">
+          <div class="col-3">
+            <label class="form-label">实重 (<span class="v-uw">LB</span>)</label>
+            <input type="number" id="vas_wt" class="form-control form-control-sm" value="2" step="0.1">
+          </div>
+          <div class="col-3">
+            <label class="form-label">长 (<span class="v-ul">In</span>)</label>
+            <input type="number" id="vas_l" class="form-control form-control-sm" value="10">
+          </div>
+          <div class="col-3">
+            <label class="form-label">宽 (<span class="v-ul">In</span>)</label>
+            <input type="number" id="vas_w" class="form-control form-control-sm" value="8">
+          </div>
+          <div class="col-3">
+            <label class="form-label">高 (<span class="v-ul">In</span>)</label>
+            <input type="number" id="vas_h" class="form-control form-control-sm" value="6">
+          </div>
+        </div>
+        <div class="derived-row mt-2">
+          <div class="derived-item">
+            <div class="label">体积重</div>
+            <div class="value" id="vas_dimwt">2.18</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">计费重</div>
+            <div class="value warn" id="vas_chargewt">2.18</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">超重/超长</div>
+            <div class="value ok" id="vas_surcharge_badge">正常</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 服务项目 -->
+    <div class="c-card">
+      <div class="c-head green">3. 增值服务选择（按需开启）</div>
+      <div class="c-body p-0">
+
+        <!-- A: 亚马逊移仓入库 -->
+        <div class="svc-item" id="svc_inbound_wrap">
+          <input class="form-check-input" type="checkbox" id="svc_inbound" checked>
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_inbound">亚马逊移仓入库操作费</label>
+              <span class="svc-price" id="price_inbound">$0.00</span>
+            </div>
+            <div class="svc-sub">包含入库、卸货、清点、FNSKU贴标等服务</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">SKU复杂度</label>
+                  <select id="inbound_sku" class="form-select form-select-sm" style="width:120px">
+                    <option value="1sku">1种SKU</option>
+                    <option value="2-5sku">2-5种SKU</option>
+                    <option value="6+sku">6种+SKU</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">入库数量</label>
+                  <input type="number" id="qty_inbound" class="form-control form-control-sm" value="50" style="width:80px">
+                </div>
+              </div>
+              <div id="inbound_opts" class="mt-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- B: 贴换标 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_labeling" checked>
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_labeling">贴换标操作费 (含FNSKU)</label>
+              <span class="svc-price" id="price_labeling">$0.00</span>
+            </div>
+            <div class="svc-sub">条形码/FNSKU贴标，按SKU复杂度和数量分级</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">SKU复杂度</label>
+                  <select id="label_sku" class="form-select form-select-sm" style="width:120px">
+                    <option value="1sku">1种SKU</option>
+                    <option value="2-5sku">2-5种SKU</option>
+                    <option value="6+sku">6种+SKU</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">贴标数量</label>
+                  <input type="number" id="qty_labeling" class="form-control form-control-sm" value="50" style="width:80px">
+                </div>
+              </div>
+              <div id="labeling_opts" class="mt-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- C: 包装 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_packing">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_packing">打包/包装耗材</label>
+              <span class="svc-price" id="price_packing">$0.00</span>
+            </div>
+            <div class="svc-sub">快递袋、气泡袋、纸箱等包装材料+人工</div>
+            <div id="packing_detail" class="svc-detail mt-2" style="display:none">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">数量</label>
+                  <input type="number" id="qty_packing" class="form-control form-control-sm" value="10" style="width:80px">
+                </div>
+              </div>
+              <div id="packing_chips" class="mt-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- D: 库存盘点 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_inventory">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_inventory">库存盘点费</label>
+              <span class="svc-price" id="price_inventory">$0.00</span>
+            </div>
+            <div class="svc-sub">对在库库存数量进行清点，按计费重分级</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">盘点数量</label>
+                  <input type="number" id="qty_inventory" class="form-control form-control-sm" value="100" style="width:80px">
+                </div>
+              </div>
+              <div id="inventory_opts" class="mt-2" style="font-size:.8rem;color:#64748b"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- E: 退货入库 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_return">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_return">退货入库操作费</label>
+              <span class="svc-price" id="price_return">$0.00</span>
+            </div>
+            <div class="svc-sub">超50LB或单边>30in加收$2/件</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">退货数量</label>
+                  <input type="number" id="qty_return" class="form-control form-control-sm" value="10" style="width:80px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- F: 贴箱唛 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_box_label">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_box_label">贴外箱唛 (FBA箱标)</label>
+              <span class="svc-price" id="price_box_label">$0.00</span>
+            </div>
+            <div class="svc-sub">打印并粘贴FBA或其他外箱标签</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">箱数</label>
+                  <input type="number" id="qty_box_label" class="form-control form-control-sm" value="10" style="width:80px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- G: 拍照 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_photo">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_photo">拍照服务</label>
+              <span class="svc-price" id="price_photo">$0.00</span>
+            </div>
+            <div class="svc-sub">按张计费，每件至少3张起（拆箱另收）</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">张数</label>
+                  <input type="number" id="qty_photo" class="form-control form-control-sm" value="10" style="width:80px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- H: 附装箱单 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_plist">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_plist">附装箱单</label>
+              <span class="svc-price" id="price_plist">$0.00</span>
+            </div>
+            <div class="svc-sub">按票收费，仓库不负责制作装箱单</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">票数</label>
+                  <input type="number" id="qty_plist" class="form-control form-control-sm" value="5" style="width:80px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- I: 弃货 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_disposal">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_disposal">弃货/垃圾处理费</label>
+              <span class="svc-price" id="price_disposal">$0.00</span>
+            </div>
+            <div class="svc-sub">$0.25/LB，计费重取实重与体积重的大者</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">重量 (LB)</label>
+                  <input type="number" id="qty_disposal" class="form-control form-control-sm" value="10" style="width:80px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- J: 打托 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_pallet">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_pallet">打托操作费</label>
+              <span class="svc-price" id="price_pallet">$0.00</span>
+            </div>
+            <div class="svc-sub">含托盘物料+人工，一次性托盘不回收</div>
+            <div class="svc-detail mt-2">
+              <div class="row g-2">
+                <div class="col-auto">
+                  <label class="form-label" style="font-size:.75rem">托数</label>
+                  <input type="number" id="qty_pallet" class="form-control form-control-sm" value="2" style="width:80px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- K: 加急工单 -->
+        <div class="svc-item">
+          <input class="form-check-input" type="checkbox" id="svc_urgent">
+          <div class="svc-body">
+            <div class="d-flex justify-content-between">
+              <label class="svc-title" for="svc_urgent">加急工单费 (3自然日)</label>
+              <span class="svc-price" id="price_urgent">$0.00</span>
+            </div>
+            <div class="svc-sub">普通工单免费，加急按操作时长收费</div>
+            <div id="urgent_detail" class="svc-detail mt-2" style="display:none">
+              <div id="urgent_chips"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /c-body -->
+    </div><!-- /c-card services -->
+
+  </div><!-- /col-lg-7 -->
+
+  <!-- 右: 汇总 -->
+  <div class="col-lg-5">
+    <div style="position:sticky;top:20px">
+      <div class="c-card">
+        <div class="c-head orange">4. 费用汇总</div>
+        <div class="c-body p-0">
+          <div class="table-responsive">
+            <table class="table result-table mb-0">
+              <thead>
+                <tr>
+                  <th>服务项目</th>
+                  <th class="text-center">单价</th>
+                  <th class="text-center">数量</th>
+                  <th class="text-end">小计</th>
+                </tr>
+              </thead>
+              <tbody id="vas_result_body">
+                <tr><td colspan="4" class="text-center py-3 text-muted">请选择服务项目...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="result-total m-3">
+            <div class="total-label">增值服务合计</div>
+            <div class="total-amount" id="vas_total">$0.00</div>
+            <div style="font-size:.72rem;opacity:.6;margin-top:4px">含所有已启用服务项 (税前)</div>
+          </div>
+          <div class="p-3 pt-0">
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="vasReset()">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>重置所有服务
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /row -->
+</div><!-- /tab-vas -->
+
+
+<!-- ══════════════════════════════════════════
+     标签3: 单位换算
+══════════════════════════════════════════ -->
+<div class="tab-pane fade" id="tab-convert">
+<div class="row g-3 justify-content-center">
+  <div class="col-lg-8">
+
+    <!-- 重量换算 -->
+    <div class="c-card">
+      <div class="c-head">⚖️ 重量换算 (动态双向)</div>
+      <div class="c-body">
+        <div class="converter-grid">
+          <div class="conv-group">
+            <label>磅 (LB)</label>
+            <input type="number" id="c_lb" placeholder="0" step="0.001">
+            <span class="unit-badge">lb</span>
+          </div>
+          <div class="conv-arrow"><i class="bi bi-arrow-left-right"></i></div>
+          <div class="conv-group">
+            <label>千克 (KG)</label>
+            <input type="number" id="c_kg" placeholder="0" step="0.001">
+            <span class="unit-badge">kg</span>
+          </div>
+          <div class="conv-group">
+            <label>盎司 (OZ)</label>
+            <input type="number" id="c_oz" placeholder="0" step="0.01">
+            <span class="unit-badge">oz</span>
+          </div>
+        </div>
+        <div class="derived-row mt-3">
+          <div class="derived-item">
+            <div class="label">克 (g)</div>
+            <div class="value" id="c_g">—</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">斤 (市斤)</div>
+            <div class="value" id="c_jin">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 长度换算 -->
+    <div class="c-card">
+      <div class="c-head blue">📏 长度换算 (动态双向)</div>
+      <div class="c-body">
+        <div class="converter-grid">
+          <div class="conv-group">
+            <label>英寸 (IN)</label>
+            <input type="number" id="c_in" placeholder="0" step="0.01">
+            <span class="unit-badge">in</span>
+          </div>
+          <div class="conv-arrow"><i class="bi bi-arrow-left-right"></i></div>
+          <div class="conv-group">
+            <label>厘米 (CM)</label>
+            <input type="number" id="c_cm" placeholder="0" step="0.1">
+            <span class="unit-badge">cm</span>
+          </div>
+          <div class="conv-group">
+            <label>毫米 (MM)</label>
+            <input type="number" id="c_mm" placeholder="0" step="1">
+            <span class="unit-badge">mm</span>
+          </div>
+          <div class="conv-group">
+            <label>米 (M)</label>
+            <input type="number" id="c_m" placeholder="0" step="0.001">
+            <span class="unit-badge">m</span>
+          </div>
+        </div>
+        <div class="derived-row mt-3">
+          <div class="derived-item">
+            <div class="label">英尺 (ft)</div>
+            <div class="value" id="c_ft">—</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">码 (yd)</div>
+            <div class="value" id="c_yd">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 体积重计算器 -->
+    <div class="c-card">
+      <div class="c-head green">📦 体积重计算器</div>
+      <div class="c-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-3">
+            <label class="form-label">长</label>
+            <input type="number" id="dv_l" class="form-control" placeholder="长" step="0.1">
+          </div>
+          <div class="col-3">
+            <label class="form-label">宽</label>
+            <input type="number" id="dv_w" class="form-control" placeholder="宽" step="0.1">
+          </div>
+          <div class="col-3">
+            <label class="form-label">高</label>
+            <input type="number" id="dv_h" class="form-control" placeholder="高" step="0.1">
+          </div>
+          <div class="col-3">
+            <label class="form-label">单位</label>
+            <select id="dv_unit" class="form-select">
+              <option value="in">英寸 (in)</option>
+              <option value="cm">厘米 (cm)</option>
+            </select>
+          </div>
+        </div>
+        <div id="dv_result" class="derived-row mt-3" style="display:none">
+          <div class="derived-item">
+            <div class="label">体积重 / 250 (lb)</div>
+            <div class="value" id="dv_250">—</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">体积重 / 222 (lb)</div>
+            <div class="value" id="dv_222">—</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">体积重 / 5000 (kg)</div>
+            <div class="value" id="dv_5000">—</div>
+          </div>
+          <div class="derived-item">
+            <div class="label">围长 L+2(W+H)</div>
+            <div class="value" id="dv_girth">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷参照表 -->
+    <div class="c-card">
+      <div class="c-head">📋 常用换算参照</div>
+      <div class="c-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <table class="table table-sm table-bordered mb-0">
+              <thead><tr><th>磅 (LB)</th><th>千克 (KG)</th></tr></thead>
+              <tbody>
+                <tr><td>1 lb</td><td>0.4536 kg</td></tr>
+                <tr><td>5 lb</td><td>2.268 kg</td></tr>
+                <tr><td>10 lb</td><td>4.536 kg</td></tr>
+                <tr><td>20 lb</td><td>9.072 kg</td></tr>
+                <tr><td>50 lb</td><td>22.68 kg</td></tr>
+                <tr><td>100 lb</td><td>45.36 kg</td></tr>
+                <tr><td>150 lb</td><td>68.04 kg</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-sm-6">
+            <table class="table table-sm table-bordered mb-0">
+              <thead><tr><th>英寸 (IN)</th><th>厘米 (CM)</th></tr></thead>
+              <tbody>
+                <tr><td>1 in</td><td>2.54 cm</td></tr>
+                <tr><td>6 in</td><td>15.24 cm</td></tr>
+                <tr><td>12 in (1ft)</td><td>30.48 cm</td></tr>
+                <tr><td>18 in</td><td>45.72 cm</td></tr>
+                <tr><td>24 in</td><td>60.96 cm</td></tr>
+                <tr><td>36 in</td><td>91.44 cm</td></tr>
+                <tr><td>48 in</td><td>121.92 cm</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /tab-convert -->
+
+
+<!-- ══════════════════════════════════════════
+     标签4: 操作费明细
+══════════════════════════════════════════ -->
+<div class="tab-pane fade" id="tab-opfee">
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="alert-info-sm">
+        <b>说明：</b>以下费率按客户等级分 T0/T1/T2/T3 显示，数据实时从 Excel 报价表读取。
+        <span class="text-danger fw-bold">出库费</span> 在代发模式下叠加，<span class="text-primary fw-bold">自提费</span> 在自提模式下叠加（两者均基于计费重）。
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="c-card">
+        <div class="c-head">出库费 (代发出库时收取)</div>
+        <div class="c-body p-0">
+          <div style="overflow:auto;max-height:500px">
+            <table class="op-fee-table">
+              <thead><tr><th>重量段</th><th>T0</th><th>T1</th><th>T2</th><th>T3</th></tr></thead>
+              <tbody id="op_outbound_body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="c-card">
+        <div class="c-head">自提费 (自提订单叠加)</div>
+        <div class="c-body p-0">
+          <div style="overflow:auto;max-height:500px">
+            <table class="op-fee-table">
+              <thead><tr><th>重量段</th><th>T0</th><th>T1</th><th>T2</th><th>T3</th></tr></thead>
+              <tbody id="op_pickup_body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /tab-opfee -->
+
+</div><!-- /tab-content -->
+</div><!-- /container -->
+
+<footer class="text-center py-3 text-muted small border-top mt-4">
+  &copy; 2026 速狗海外仓 SureGo Logistics &nbsp;|&nbsp; 数据由 GitHub Actions 自动同步
+</footer>
+
+<!-- ════════════════════════════════
+     嵌入数据 & 核心逻辑
+════════════════════════════════ -->
+<script>
+/* ── 后端注入数据 ── */
+const DATA = __BUILD_DATA__;
+
+// ─────────────────────────────────────
+// 工具函数
+// ─────────────────────────────────────
+const round2 = v => Math.round(v * 100) / 100;
+const fmt = v => '$' + round2(v).toFixed(2);
+
+function getActiveTier(prefix) {
+  return document.querySelector(`input[name="${prefix}_tier"]:checked`)?.value || 'T3';
+}
+
+function getTierData(tier) {
+  return DATA.tiers[tier] || DATA.tiers['T3'] || {};
+}
+
+// ─────────────────────────────────────
+// 邮编 Zone 计算
+// ─────────────────────────────────────
+function calcZone(destZip, originKey, conf) {
+  if (!destZip || destZip.length < 3) return 8;
+  const d = parseInt(destZip.substring(0, 3));
+  const region = DATA.warehouses[originKey]?.region || 'EAST';
+
+  if (conf.zone_source === 'gofo') {
+    const gz = DATA.gofo_zips?.[destZip];
+    if (!gz) return 8;
+    if (region === 'WEST' && gz.region === 'WE') return 2;
+    if (region === 'CENTRAL' && gz.region === 'CE') return 2;
+    if (region === 'EAST' && gz.region === 'EA') return 2;
+    return 8;
+  }
+  if (conf.zone_source === 'xlmiles') return 2;
+
+  if (region === 'WEST') {
+    if (d >= 900 && d <= 935) return 2;
+    if (d >= 936 && d <= 961) return 3;
+    if ((d >= 890 && d <= 898) || d === 967) return 3;
+    if ((d >= 970 && d <= 994) || (d >= 840 && d <= 884)) return 4;
+    if (d >= 500 && d <= 799) return 7;
+    if (d >= 0 && d <= 499) return 8;
+    return 5;
+  }
+  if (region === 'CENTRAL') {
+    if (d >= 600 && d <= 629) return 2;
+    if (d >= 460 && d <= 569) return 3;
+    if ((d >= 400 && d <= 459) || (d >= 700 && d <= 799)) return 4;
+    if (d >= 200 && d <= 399) return 5;
+    if (d >= 800 && d <= 899) return 6;
+    if (d >= 0 && d <= 199) return 6;
+    if (d >= 900 && d <= 966) return 7;
+    return 5;
+  }
+  // EAST
+  if (d >= 70 && d <= 89) return 2;
+  if ((d >= 0 && d <= 69) || (d >= 150 && d <= 199)) return 3;
+  if (d >= 200 && d <= 299) return 4;
+  if (d >= 400 && d <= 599) return 5;
+  if (d >= 600 && d <= 799) return 7;
+  if (d >= 800 && d <= 999) return 8;
+  return 6;
+}
+
+function getXLService(L, W, H, wt) {
+  const dims = [L, W, H].sort((a, b) => b - a);
+  const g = dims[0] + 2 * (dims[1] + dims[2]);
+  if (dims[0] <= 96 && g <= 130 && wt <= 150) return {code:"AH", name:"AH大件"};
+  if (dims[0] <= 108 && g <= 165 && wt <= 150) return {code:"OS", name:"OS大件"};
+  if (dims[0] <= 144 && g <= 225 && wt <= 200) return {code:"OM", name:"OM超限"};
+  return {code:null, name:"超规格"};
+}
+
+// ─────────────────────────────────────
+// 初始化仓库下拉
+// ─────────────────────────────────────
+function initWarehouses() {
+  const sel = document.getElementById('sh_wh');
+  Object.entries(DATA.warehouses).forEach(([code, info]) => {
+    const opt = document.createElement('option');
+    opt.value = code; opt.text = info.name;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    document.getElementById('sh_wh_region').textContent = `归属: ${DATA.warehouses[sel.value]?.region}`;
+    shippingCalc();
+  });
+  if (sel.options.length) sel.dispatchEvent(new Event('change'));
+}
+
+// ─────────────────────────────────────
+// 邮编信息联网查询
+// ─────────────────────────────────────
+let _zipTimer = null;
+async function fetchZipInfo(zip) {
+  const box = document.getElementById('sh_loc_display');
+  box.style.display = 'block';
+  let html = '';
+
+  try {
+    const r = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (r.ok) {
+      const d = await r.json();
+      const p = d.places[0];
+      const st = p['state abbreviation'];
+      const cn = DATA.us_states_cn[st] || st;
+      html += `<div style="color:#1d4ed8;font-weight:700">🌍 ${p['place name']}, ${st} (${cn})</div>`;
+    }
+  } catch(e) {}
+
+  if (DATA.gofo_zips?.[zip]) {
+    const g = DATA.gofo_zips[zip];
+    html += `<div style="color:#15803d;font-weight:700">🔴 GOFO区域: ${g.region}</div>`;
+  }
+
+  box.innerHTML = html || '<span style="color:#94a3b8">未查询到地址信息</span>';
+}
+
+// ─────────────────────────────────────
+// 规格预检
+// ─────────────────────────────────────
+function updateCompliance(L, W, H, wt) {
+  const dims = [L, W, H].sort((a, b) => b - a);
+  const maxL = dims[0];
+  const girth = maxL + 2 * (dims[1] + dims[2]);
+  const comp = document.getElementById('sh_compliance');
+  const list = document.getElementById('sh_comp_list');
+
+  const checks = [];
+  if (wt > 150) checks.push(`<span style="color:#dc2626">重量 > 150lb ⚠</span>`);
+  if (maxL > 108) checks.push(`<span style="color:#dc2626">最长边 > 108in ⚠</span>`);
+  if (girth > 165) checks.push(`<span style="color:#d97706">围长 > 165in</span>`);
+
+  if (L > 0 && wt > 0) {
+    comp.style.display = 'block';
+    list.innerHTML = (checks.length ? checks.join(' | ') + '<br>' : '') +
+      `UniUni: <b style="color:${(wt>20||maxL>20)?'#dc2626':'#16a34a'}">${(wt>20||maxL>20)?'超规':'正常'}</b> &nbsp;|&nbsp; ` +
+      `USPS: <b style="color:${(wt>70||girth>130)?'#dc2626':'#16a34a'}">${(wt>70||girth>130)?'超规':'正常'}</b> &nbsp;|&nbsp; ` +
+      `XLmiles: <b style="color:${(wt>200||maxL>144||girth>225)?'#dc2626':'#16a34a'}">${(wt>200||maxL>144||girth>225)?'超规':'正常'}</b>`;
+  } else {
+    comp.style.display = 'none';
+  }
+}
+
+// ─────────────────────────────────────
+// 运费主计算
+// ─────────────────────────────────────
+function shippingCalc() {
+  const whCode = document.getElementById('sh_wh').value;
+  const tier   = getActiveTier('sh');
+  const fuelIn = parseFloat(document.getElementById('sh_fuel').value) || 0;
+  const zip    = document.getElementById('sh_zip').value.trim();
+  const isRes  = document.getElementById('sh_addr').value === 'res';
+  const sigD   = document.getElementById('sh_sig_direct').checked;
+  const sigA   = document.getElementById('sh_sig_adult').checked;
+
+  const L  = parseFloat(document.getElementById('sh_l').value)  || 0;
+  const W  = parseFloat(document.getElementById('sh_w').value)  || 0;
+  const H  = parseFloat(document.getElementById('sh_h').value)  || 0;
+  const wt = parseFloat(document.getElementById('sh_wt').value) || 0;
+
+  // 更新计费重显示
+  if (L > 0 && wt > 0) {
+    const dimWt = (L * W * H) / 250;
+    const chargeWt = Math.max(wt, dimWt);
+    document.getElementById('sh_pkg_info').style.display = 'flex';
+    document.getElementById('sh_dimwt').textContent    = dimWt.toFixed(2) + ' lb';
+    document.getElementById('sh_chargewt').textContent = chargeWt.toFixed(2) + ' lb';
+    const girth = Math.max(L, W, H) + 2 * (L + W + H - Math.max(L, W, H));
+    document.getElementById('sh_girth').textContent = girth.toFixed(1) + ' in';
+    updateCompliance(L, W, H, wt);
+  } else {
+    document.getElementById('sh_pkg_info').style.display = 'none';
+  }
+
+  if (zip.length !== 5 || wt <= 0) {
+    document.getElementById('sh_result_body').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">请输入完整5位邮编及实重</td></tr>';
+    return;
+  }
+
+  document.getElementById('sh_tier_badge').textContent = tier;
+  document.getElementById('sh_pkg_badge').textContent =
+    `包裹: ${L}×${W}×${H}" | 实重: ${wt}lb | 体积重(÷250): ${((L*W*H)/250).toFixed(2)}lb`;
+
+  const tierData    = getTierData(tier);
+  const channelData = tierData.channels || {};
+  const results = [];
+
+  Object.entries(DATA.channels).forEach(([chName, conf]) => {
+    const chData = channelData[chName];
+    if (!chData) return;
+
+    const allowedWh = chData.allow_wh || [];
+    if (allowedWh.length && !allowedWh.includes(whCode)) return;
+
+    if (chName.includes('UNIUNI') && wt > 20) return;
+    if (chName.includes('USPS') && wt > 70) return;
+    if (chName.includes('XLmiles') && (wt > 200)) return;
+
+    const divisor = conf.dim_divisor || 250;
+    let dimWt = (L * W * H) / divisor;
+    let finalWt = Math.max(wt, dimWt);
+    if (!chName.includes('XLmiles')) finalWt = Math.ceil(finalWt);
+
+    const zone = calcZone(zip, whCode, conf);
+    const prices = chData.prices || [];
+
+    let basePrice = 0;
+    let svcTag = '';
+
+    if (chName.includes('XLmiles')) {
+      const xl = getXLService(L, W, H, wt);
+      if (!xl.code) return;
+      svcTag = `<br><small style="color:#2563eb">${xl.name}</small>`;
+      const row = prices.find(r => r.service === xl.code && r.w >= finalWt - 0.001);
+      if (row) basePrice = row[zone] || row[6] || 0;
+    } else {
+      const row = prices.find(r => r.w >= finalWt - 0.001);
+      if (row) basePrice = row[zone] || row[8] || 0;
+    }
+    if (basePrice <= 0) return;
+
+    let surcharges = 0;
+    const details = [];
+
+    if (isRes && chData.res_fee > 0) {
+      surcharges += chData.res_fee;
+      details.push(`住宅 ${fmt(chData.res_fee)}`);
+    }
+    if (sigD && chData.sig_direct > 0) {
+      surcharges += chData.sig_direct;
+      details.push(`直/间接签名 ${fmt(chData.sig_direct)}`);
+    }
+    if (sigA && chData.sig_adult > 0) {
+      surcharges += chData.sig_adult;
+      details.push(`成人签名 ${fmt(chData.sig_adult)}`);
+    }
+
+    const fuelRate = fuelIn / 100;
+    if (conf.fuel_mode === 'included') {
+      details.push(`<span class="fuel-included">燃油:已含</span>`);
+    } else if (conf.fuel_mode !== 'none') {
+      let rate = fuelRate;
+      let tag = '';
+      if (conf.fuel_mode === 'discount_85') { rate *= 0.85; tag = '(85折)'; }
+      const fuelAmt = round2((basePrice + surcharges) * rate);
+      surcharges += fuelAmt;
+      details.push(`<span class="fuel-extra">燃油${tag}: ${fmt(fuelAmt)}</span>`);
+    }
+
+    const total = round2(basePrice + surcharges);
+    results.push({ chName, svcTag, zone, finalWt: finalWt.toFixed(1), basePrice, details, total });
+  });
+
+  results.sort((a, b) => a.total - b.total);
+  const tbody = document.getElementById('sh_result_body');
+  if (!results.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">未匹配到可用报价（尺寸超规或仓库无此渠道）</td></tr>';
+    return;
+  }
+  tbody.innerHTML = results.map((r, i) => `
+    <tr ${i===0?'style="background:#f0fdf4"':''}>
+      <td class="fw-bold">${r.chName}${r.svcTag}${i===0?'<span class="badge bg-success ms-1" style="font-size:.65rem">最优</span>':''}</td>
+      <td><span class="zone-badge">Z${r.zone}</span></td>
+      <td>${r.finalWt} lb</td>
+      <td class="${i===0?'price-best':'price-main'}">${fmt(r.basePrice)}</td>
+      <td class="surcharge-note">${r.details.join('<br>') || '—'}</td>
+      <td class="text-end ${i===0?'price-best':'price-main'}">${fmt(r.total)}</td>
+      <td class="text-center" style="color:#16a34a">✔</td>
+    </tr>`).join('');
+}
+
+// ─────────────────────────────────────
+// 增值服务计算
+// ─────────────────────────────────────
+let vasPackType = 'bag_s';
+let vasUrgentTime = '<5分钟';
+
+function vasGetWeightBand(wt) {
+  if (wt < 10) return '0-9.9LB';
+  if (wt < 30) return '10-29.9LB';
+  return '30LB+';
+}
+
+function vasGetInboundPrice(sku, wt) {
+  const tier = getActiveTier('vas');
+  const td   = getTierData(tier).vas?.amazon_inbound;
+  if (!td) return 0;
+  const group = td[sku] || td['1sku'];
+  const band  = vasGetWeightBand(wt);
+  const row   = group.find(r => r.wt === band);
+  return row ? row.price : 0;
+}
+
+function vasGetLabelPrice(sku, qty) {
+  const tier = getActiveTier('vas');
+  const td   = getTierData(tier).vas?.labeling;
+  if (!td) return 0;
+  const tiers = (td[sku] || td['1sku']).tiers;
+  if (qty < 100) return tiers[0]?.price || 0;
+  if (qty < 200) return tiers[1]?.price || 0;
+  if (qty <= 500) return tiers[2]?.price || 0;
+  return tiers[3]?.price || 0;
+}
+
+function vasGetInventoryPrice(wt) {
+  const tier = getActiveTier('vas');
+  const tbl  = getTierData(tier).vas?.inventory_check;
+  if (!tbl) return 0.2;
+  if (wt < 10) return tbl[0]?.price || 0.2;
+  if (wt < 20) return tbl[1]?.price || 0.3;
+  if (wt < 30) return tbl[2]?.price || 0.35;
+  if (wt < 50) return tbl[3]?.price || 0.4;
+  return tbl[4]?.price || 1.0;
+}
+
+function initPackingChips() {
+  const tier   = getActiveTier('vas');
+  const td     = getTierData(tier).vas?.packing || {};
+  const items  = [
+    {key:'bag_s', label:`快递袋-小号 ${fmt(td.bag_s||0)}`},
+    {key:'bag_m', label:`快递袋-中号 ${fmt(td.bag_m||0)}`},
+    {key:'bag_l', label:`快递袋-大号 ${fmt(td.bag_l||0)}`},
+    {key:'bubble', label:`气泡袋 ${fmt(td.bubble||0)}`},
+    {key:'box_s', label:`纸箱-小号 ${fmt(td.box_s||0)}`},
+    {key:'box_m', label:`纸箱-中号 ${fmt(td.box_m||0)}`},
+    {key:'box_l', label:`纸箱-大号 ${fmt(td.box_l||0)}`},
+  ];
+  document.getElementById('packing_chips').innerHTML = items.map(it =>
+    `<span class="option-chip ${it.key===vasPackType?'active':''}" onclick="selectPackType('${it.key}')">${it.label}</span>`
+  ).join('');
+}
+
+function selectPackType(key) {
+  vasPackType = key;
+  initPackingChips();
+  vasCalc();
+}
+
+function initUrgentChips() {
+  const tier   = getActiveTier('vas');
+  const tbl    = getTierData(tier).vas?.urgent_order || [];
+  document.getElementById('urgent_chips').innerHTML = tbl.map(row =>
+    `<span class="option-chip ${row.time===vasUrgentTime?'active':''}" onclick="selectUrgentTime('${row.time}')">
+      ${row.time}: ${fmt(row.price)}
+    </span>`
+  ).join('');
+}
+
+function selectUrgentTime(t) {
+  vasUrgentTime = t;
+  initUrgentChips();
+  vasCalc();
+}
+
+function vasCalc() {
+  const tier  = getActiveTier('vas');
+  const td    = getTierData(tier);
+  const vas   = td.vas || {};
+
+  const isImp = document.querySelector('input[name="vas_unit"]:checked')?.value === 'imp';
+  const rawWt = parseFloat(document.getElementById('vas_wt').value) || 0;
+  const rawL  = parseFloat(document.getElementById('vas_l').value)  || 0;
+  const rawW  = parseFloat(document.getElementById('vas_w').value)  || 0;
+  const rawH  = parseFloat(document.getElementById('vas_h').value)  || 0;
+
+  let wt_lb, L_in, W_in, H_in;
+  if (isImp) { wt_lb = rawWt; L_in = rawL; W_in = rawW; H_in = rawH; }
+  else { wt_lb = rawWt * 2.20462; L_in = rawL / 2.54; W_in = rawW / 2.54; H_in = rawH / 2.54; }
+
+  const dimWt_lb  = (L_in * W_in * H_in) / 222;
+  const chargeWt  = Math.max(wt_lb, dimWt_lb);
+  const isSurcharge = wt_lb > 50 || Math.max(L_in, W_in, H_in) > 30;
+
+  document.getElementById('vas_dimwt').textContent    = dimWt_lb.toFixed(2) + ' LB';
+  document.getElementById('vas_chargewt').textContent = chargeWt.toFixed(2) + ' LB';
+  const badge = document.getElementById('vas_surcharge_badge');
+  badge.textContent = isSurcharge ? '⚠ 触发附加费' : '正常';
+  badge.className   = 'value ' + (isSurcharge ? 'warn' : 'ok');
+
+  let total = 0;
+  const rows = [];
+
+  const add = (name, spec, price, qty, sub, warn=false) => {
+    rows.push({name, spec, price, qty, sub, warn});
+    total += sub;
+  };
+
+  // A: 亚马逊移仓入库
+  if (document.getElementById('svc_inbound').checked) {
+    const sku  = document.getElementById('inbound_sku').value;
+    const qty  = parseInt(document.getElementById('qty_inbound').value) || 0;
+    const price = vasGetInboundPrice(sku, chargeWt);
+    let sub = round2(price * qty);
+
+    // 显示选项
+    const group = vas.amazon_inbound?.[sku] || [];
+    const band  = vasGetWeightBand(chargeWt);
+    document.getElementById('inbound_opts').innerHTML = group.map(r =>
+      `<span class="option-chip ${r.wt===band?'active':''}">${r.wt}: ${fmt(r.price)}</span>`
+    ).join('');
+
+    add('亚马逊移仓入库', `${sku}, 计费重${chargeWt.toFixed(1)}lb`, price, qty, sub);
+    if (isSurcharge) {
+      const surSub = round2(2.0 * qty);
+      add('↳ 超重/超长附加', '$2.00/件', 2.0, qty, surSub, true);
+    }
+    document.getElementById('price_inbound').textContent = fmt(sub);
+  } else {
+    document.getElementById('inbound_opts').innerHTML = "<small class='text-muted'>未启用</small>";
+    document.getElementById('price_inbound').textContent = '$0.00';
+  }
+
+  // B: 贴换标
+  if (document.getElementById('svc_labeling').checked) {
+    const sku  = document.getElementById('label_sku').value;
+    const qty  = parseInt(document.getElementById('qty_labeling').value) || 0;
+    const price = vasGetLabelPrice(sku, qty);
+    const sub   = round2(price * qty);
+    const tiers = vas.labeling?.[sku]?.tiers || [];
+    document.getElementById('labeling_opts').innerHTML = tiers.map(t =>
+      `<span class="option-chip ${
+        (qty<100&&t.range.includes('<100'))||(qty>=100&&qty<200&&t.range.includes('100~'))||(qty>=200&&qty<=500&&t.range.includes('200~'))||(qty>500&&t.range.includes('500+'))?'active':''
+      }">${t.range}: ${fmt(t.price)}</span>`
+    ).join('');
+    add('贴换标操作费', `${sku}, ${qty}个`, price, qty, sub);
+    document.getElementById('price_labeling').textContent = fmt(price);
+  } else {
+    document.getElementById('labeling_opts').innerHTML = "<small class='text-muted'>未启用</small>";
+    document.getElementById('price_labeling').textContent = '$0.00';
+  }
+
+  // C: 包装
+  const packEl = document.getElementById('svc_packing');
+  document.getElementById('packing_detail').style.display = packEl.checked ? 'block' : 'none';
+  if (packEl.checked) {
+    const qty   = parseInt(document.getElementById('qty_packing').value) || 0;
+    const pd    = vas.packing || {};
+    const price = pd[vasPackType] || 0;
+    const sub   = round2(price * qty);
+    initPackingChips();
+    add('包装/耗材', vasPackType, price, qty, sub);
+    document.getElementById('price_packing').textContent = fmt(price);
+  } else {
+    document.getElementById('price_packing').textContent = '$0.00';
+  }
+
+  // D: 库存盘点
+  if (document.getElementById('svc_inventory').checked) {
+    const qty   = parseInt(document.getElementById('qty_inventory').value) || 0;
+    const price = vasGetInventoryPrice(chargeWt);
+    const sub   = round2(price * qty);
+    document.getElementById('inventory_opts').textContent = `当前计费重: ${chargeWt.toFixed(1)}lb → 单价 ${fmt(price)}/件`;
+    add('库存盘点', `${chargeWt.toFixed(1)}lb段`, price, qty, sub);
+    document.getElementById('price_inventory').textContent = fmt(price);
+  } else {
+    document.getElementById('price_inventory').textContent = '$0.00';
+  }
+
+  // E: 退货入库
+  if (document.getElementById('svc_return').checked) {
+    const qty   = parseInt(document.getElementById('qty_return').value) || 0;
+    const price = vas.return_inbound || 1.0;
+    const sub   = round2(price * qty);
+    add('退货入库', '一口价/件', price, qty, sub);
+    document.getElementById('price_return').textContent = fmt(price);
+    if (isSurcharge) {
+      const s = round2(2.0 * qty);
+      add('↳ 退货附加', '超重/超长', 2.0, qty, s, true);
+    }
+  } else { document.getElementById('price_return').textContent = '$0.00'; }
+
+  // F: 贴箱唛
+  if (document.getElementById('svc_box_label').checked) {
+    const qty   = parseInt(document.getElementById('qty_box_label').value) || 0;
+    const price = vas.box_label || 0.5;
+    add('贴外箱唛', 'FBA箱标', price, qty, round2(price*qty));
+    document.getElementById('price_box_label').textContent = fmt(price);
+  } else { document.getElementById('price_box_label').textContent = '$0.00'; }
+
+  // G: 拍照
+  if (document.getElementById('svc_photo').checked) {
+    const qty   = parseInt(document.getElementById('qty_photo').value) || 0;
+    const price = vas.photo || 0.7;
+    add('拍照服务', '按张', price, qty, round2(price*qty));
+    document.getElementById('price_photo').textContent = fmt(price);
+  } else { document.getElementById('price_photo').textContent = '$0.00'; }
+
+  // H: 附装箱单
+  if (document.getElementById('svc_plist').checked) {
+    const qty   = parseInt(document.getElementById('qty_plist').value) || 0;
+    const price = vas.attach_packing_list || 1.0;
+    add('附装箱单', '按票', price, qty, round2(price*qty));
+    document.getElementById('price_plist').textContent = fmt(price);
+  } else { document.getElementById('price_plist').textContent = '$0.00'; }
+
+  // I: 弃货
+  if (document.getElementById('svc_disposal').checked) {
+    const wt2   = parseFloat(document.getElementById('qty_disposal').value) || 0;
+    const price = vas.disposal_per_lb || 0.25;
+    add('弃货/垃圾处理', 'per LB', price, wt2 + ' LB', round2(price*wt2));
+    document.getElementById('price_disposal').textContent = fmt(price);
+  } else { document.getElementById('price_disposal').textContent = '$0.00'; }
+
+  // J: 打托
+  if (document.getElementById('svc_pallet').checked) {
+    const qty   = parseInt(document.getElementById('qty_pallet').value) || 0;
+    const price = vas.pallet_fee || 15.0;
+    add('打托操作费', '含物料', price, qty + '托', round2(price*qty));
+    document.getElementById('price_pallet').textContent = fmt(price);
+  } else { document.getElementById('price_pallet').textContent = '$0.00'; }
+
+  // K: 加急工单
+  const urgentEl = document.getElementById('svc_urgent');
+  document.getElementById('urgent_detail').style.display = urgentEl.checked ? 'block' : 'none';
+  if (urgentEl.checked) {
+    initUrgentChips();
+    const tbl = vas.urgent_order || [];
+    const row = tbl.find(r => r.time === vasUrgentTime);
+    const price = row ? row.price : 0;
+    add('加急工单', vasUrgentTime, price, 1, price);
+    document.getElementById('price_urgent').textContent = fmt(price);
+  } else { document.getElementById('price_urgent').textContent = '$0.00'; }
+
+  // 渲染汇总表
+  document.getElementById('vas_total').textContent = fmt(total);
+  const tbody = document.getElementById('vas_result_body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">请开启至少一项服务</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(r => `
+      <tr ${r.warn?'style="color:#dc2626"':''}>
+        <td>
+          <div class="item-name">${r.name}</div>
+          <div class="item-spec">${r.spec}</div>
+        </td>
+        <td class="text-center">${fmt(r.price)}</td>
+        <td class="text-center">${r.qty}</td>
+        <td class="text-end fw-bold">${fmt(r.sub)}</td>
+      </tr>`).join('');
+  }
+}
+
+function vasReset() {
+  document.querySelectorAll('#tab-vas input[type=checkbox]').forEach(el => { el.checked = false; });
+  document.getElementById('svc_inbound').checked = true;
+  document.getElementById('svc_labeling').checked = true;
+  vasCalc();
+}
+
+function vasToggleUnit() {
+  const isImp = document.querySelector('input[name="vas_unit"]:checked')?.value === 'imp';
+  document.querySelectorAll('.v-uw').forEach(el => el.textContent = isImp ? 'LB' : 'KG');
+  document.querySelectorAll('.v-ul').forEach(el => el.textContent = isImp ? 'In' : 'CM');
+  vasCalc();
+}
+
+// ─────────────────────────────────────
+// 单位换算 (动态双向)
+// ─────────────────────────────────────
+let _lockWeight = false;
+function wConvert(src) {
+  if (_lockWeight) return;
+  _lockWeight = true;
+  let lb = 0;
+  if (src === 'lb') lb = parseFloat(document.getElementById('c_lb').value) || 0;
+  else if (src === 'kg') lb = (parseFloat(document.getElementById('c_kg').value) || 0) / 0.453592;
+  else if (src === 'oz') lb = (parseFloat(document.getElementById('c_oz').value) || 0) / 16;
+
+  if (lb > 0) {
+    if (src !== 'lb') document.getElementById('c_lb').value = lb.toFixed(4);
+    if (src !== 'kg') document.getElementById('c_kg').value = (lb * 0.453592).toFixed(4);
+    if (src !== 'oz') document.getElementById('c_oz').value = (lb * 16).toFixed(3);
+    document.getElementById('c_g').textContent   = (lb * 453.592).toFixed(1) + ' g';
+    document.getElementById('c_jin').textContent = (lb * 0.453592 * 2).toFixed(3) + ' 斤';
+  } else {
+    ['c_lb','c_kg','c_oz'].forEach(id => { if (src !== id.split('_')[1]) document.getElementById(id).value = ''; });
+    document.getElementById('c_g').textContent = '—';
+    document.getElementById('c_jin').textContent = '—';
+  }
+  _lockWeight = false;
+}
+
+let _lockLen = false;
+function lConvert(src) {
+  if (_lockLen) return;
+  _lockLen = true;
+  let cm = 0;
+  if (src === 'in') cm = (parseFloat(document.getElementById('c_in').value) || 0) * 2.54;
+  else if (src === 'cm') cm = parseFloat(document.getElementById('c_cm').value) || 0;
+  else if (src === 'mm') cm = (parseFloat(document.getElementById('c_mm').value) || 0) / 10;
+  else if (src === 'm')  cm = (parseFloat(document.getElementById('c_m').value)  || 0) * 100;
+
+  if (cm > 0) {
+    if (src !== 'in') document.getElementById('c_in').value = (cm / 2.54).toFixed(4);
+    if (src !== 'cm') document.getElementById('c_cm').value = cm.toFixed(4);
+    if (src !== 'mm') document.getElementById('c_mm').value = (cm * 10).toFixed(2);
+    if (src !== 'm')  document.getElementById('c_m').value  = (cm / 100).toFixed(5);
+    document.getElementById('c_ft').textContent = (cm / 30.48).toFixed(4) + ' ft';
+    document.getElementById('c_yd').textContent = (cm / 91.44).toFixed(5) + ' yd';
+  } else {
+    ['c_in','c_cm','c_mm','c_m'].forEach(id => { if (src !== id.split('_')[1]) document.getElementById(id).value = ''; });
+    document.getElementById('c_ft').textContent = '—';
+    document.getElementById('c_yd').textContent = '—';
+  }
+  _lockLen = false;
+}
+
+function dvCalc() {
+  const L = parseFloat(document.getElementById('dv_l').value) || 0;
+  const W = parseFloat(document.getElementById('dv_w').value) || 0;
+  const H = parseFloat(document.getElementById('dv_h').value) || 0;
+  const u = document.getElementById('dv_unit').value;
+  if (L <= 0) { document.getElementById('dv_result').style.display='none'; return; }
+
+  let vol_in3, max_in, g_in;
+  if (u === 'cm') {
+    vol_in3 = (L/2.54) * (W/2.54) * (H/2.54);
+    const dims = [L/2.54, W/2.54, H/2.54].sort((a,b)=>b-a);
+    max_in = dims[0]; g_in = max_in + 2*(dims[1]+dims[2]);
+  } else {
+    vol_in3 = L * W * H;
+    const dims = [L, W, H].sort((a,b)=>b-a);
+    max_in = dims[0]; g_in = max_in + 2*(dims[1]+dims[2]);
+  }
+
+  document.getElementById('dv_result').style.display = 'flex';
+  document.getElementById('dv_250').textContent  = (vol_in3/250).toFixed(3) + ' lb';
+  document.getElementById('dv_222').textContent  = (vol_in3/222).toFixed(3) + ' lb';
+  document.getElementById('dv_5000').textContent = (vol_in3*16.3871/5000).toFixed(3) + ' kg';
+  document.getElementById('dv_girth').textContent= g_in.toFixed(2) + (u==='cm'?' in':'  in');
+}
+
+// ─────────────────────────────────────
+// 操作费表格填充
+// ─────────────────────────────────────
+function fillOpTables() {
+  const tiers = ['T0','T1','T2','T3'];
+  const allRanges = new Set();
+  tiers.forEach(t => {
+    const d = DATA.tiers[t];
+    if (d) Object.keys(d.outbound || {}).forEach(k => allRanges.add(k));
+  });
+  const ranges = Array.from(allRanges);
+
+  ['op_outbound_body', 'op_pickup_body'].forEach((bodyId, idx) => {
+    const key = idx === 0 ? 'outbound' : 'pickup';
+    const tbody = document.getElementById(bodyId);
+    tbody.innerHTML = ranges.map(r => {
+      const cells = tiers.map(t => {
+        const val = DATA.tiers[t]?.[key]?.[r];
+        return `<td>${val !== undefined ? fmt(val) : '—'}</td>`;
+      }).join('');
+      return `<tr><td style="text-align:left">${r}</td>${cells}</tr>`;
+    }).join('');
+  });
+}
+
+// ─────────────────────────────────────
+// 事件绑定
+// ─────────────────────────────────────
+function bindEvents() {
+  // 运费标签
+  document.getElementById('sh_zip').addEventListener('input', function() {
+    if (this.value.length === 5) {
+      fetchZipInfo(this.value).then(() => shippingCalc());
+    } else {
+      document.getElementById('sh_loc_display').style.display = 'none';
+      shippingCalc();
+    }
+  });
+  ['sh_l','sh_w','sh_h','sh_wt','sh_fuel'].forEach(id =>
+    document.getElementById(id).addEventListener('input', shippingCalc));
+  document.getElementById('sh_addr').addEventListener('change', shippingCalc);
+  document.getElementById('sh_sig_direct').addEventListener('change', shippingCalc);
+  document.getElementById('sh_sig_adult').addEventListener('change', shippingCalc);
+  document.querySelectorAll('input[name="sh_tier"]').forEach(r =>
+    r.addEventListener('change', shippingCalc));
+
+  // 增值服务
+  const vasInputs = [
+    'vas_wt','vas_l','vas_w','vas_h',
+    'qty_inbound','qty_labeling','qty_packing','qty_inventory',
+    'qty_return','qty_box_label','qty_photo','qty_plist','qty_disposal','qty_pallet',
+    'inbound_sku','label_sku'
+  ];
+  vasInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', vasCalc);
+    if (el) el.addEventListener('change', vasCalc);
+  });
+  document.querySelectorAll('#tab-vas input[type=checkbox], input[name="vas_tier"], input[name="vas_unit"]')
+    .forEach(el => el.addEventListener('change', () => { vasToggleUnit(); vasCalc(); }));
+
+  // 单位换算
+  document.getElementById('c_lb').addEventListener('input', () => wConvert('lb'));
+  document.getElementById('c_kg').addEventListener('input', () => wConvert('kg'));
+  document.getElementById('c_oz').addEventListener('input', () => wConvert('oz'));
+  document.getElementById('c_in').addEventListener('input', () => lConvert('in'));
+  document.getElementById('c_cm').addEventListener('input', () => lConvert('cm'));
+  document.getElementById('c_mm').addEventListener('input', () => lConvert('mm'));
+  document.getElementById('c_m').addEventListener('input',  () => lConvert('m'));
+  ['dv_l','dv_w','dv_h','dv_unit'].forEach(id =>
+    document.getElementById(id).addEventListener('input', dvCalc));
+}
+
+// ─────────────────────────────────────
+// 初始化
+// ─────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initWarehouses();
+  bindEvents();
+  fillOpTables();
+  initPackingChips();
+  initUrgentChips();
+  vasCalc();
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
