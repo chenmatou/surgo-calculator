@@ -1,0 +1,73 @@
+name: 构建报价系统 (Auto Build)
+
+# 触发条件：
+# 1. 推送或更新 data/*.xlsx 或 template.html 或 build.py
+# 2. 手动触发（方便测试）
+on:
+  push:
+    paths:
+      - 'data/**.xlsx'
+      - 'template.html'
+      - 'build.py'
+      - 'requirements.txt'
+  workflow_dispatch:   # 手动触发按钮
+
+permissions:
+  contents: write    # 需要写入 public/ 并提交
+  pages: write
+  id-token: write
+
+# 只保留最新的一次运行，取消队列中较旧的
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      # 1. 检出代码
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      # 2. 安装 Python
+      - name: 设置 Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # 3. 安装依赖
+      - name: 安装 Python 依赖
+        run: pip install -r requirements.txt
+
+      # 4. 运行构建脚本
+      - name: 运行构建脚本
+        run: python build.py
+
+      # 5. 提交 public/index.html 回仓库
+      - name: 提交生成文件
+        run: |
+          git config --global user.name  "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add public/index.html
+          git diff --cached --quiet || git commit -m "🚀 自动构建: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          git push
+
+      # 6. 部署到 GitHub Pages
+      - name: 上传 Pages 构件
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+  deploy-pages:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
